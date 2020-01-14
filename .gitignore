@@ -1,0 +1,12 @@
+keycloak-7*
+keycloak-8*
+keycloak-9*
+build
+tmp
+
+*.zip
+*.cer
+*.pem
+*.p12
+*.truststore
+*.keystore
