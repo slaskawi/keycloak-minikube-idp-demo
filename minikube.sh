@@ -2,7 +2,7 @@
 
 set -x
 
-KEYCLOAK_HOST=192-168-0-8.nip.io
+KEYCLOAK_HOST=$1
 
 minikube stop || true
 minikube delete || true

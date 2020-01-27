@@ -45,15 +45,17 @@ keycloak/user:
 
 .PHONY: keycloak/prepare
 keycloak/prepare:
-	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh config credentials --config /tmp/.kcadm.config --server http://localhost:8080/auth --realm master --user admin --password admin
-	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/kc-client-openshift-web-console.json -s "redirectUris=[\"https://$(MINIKUBE_IP):8443/console/*\",\"https://localhost:9000/*\"]" -s baseUrl=https://$(MINIKUBE_IP):8443/ -s adminUrl=https://$(MINIKUBE_IP):8443/
-	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/kc-client-openshift-cli.json
+	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh config credentials --config /tmp/.kcadm.config --server http://$(KEYCLOAK_HOST):8080/auth --realm master --user admin --password admin
+	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create realms --config /tmp/.kcadm.config -f ./keycloak-configuration/realm.json
+	#./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/client.json
+	#./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create users --config /tmp/.kcadm.config -f ./keycloak-configuration/users.json
+	#./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/kc-client-openshift-web-console.json -s "redirectUris=[\"https://$(MINIKUBE_IP):8443/console/*\",\"https://localhost:9000/*\"]" -s baseUrl=https://$(MINIKUBE_IP):8443/ -s adminUrl=https://$(MINIKUBE_IP):8443/
 	#I'm not sure why KC doesn't give you this on the first try...
-	$(shell ./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh get realms/master/authentication/flows --config /tmp/.kcadm.config -r master | jq -c '.[] | select(.alias | contains("http challenge")) | .id' | sed 's/"//g')
-	$(eval FLOW_ID := $(shell ./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh get realms/master/authentication/flows --config /tmp/.kcadm.config -r master | jq -c '.[] | select(.alias | contains("http challenge")) | .id' | sed 's/"//g'))
-	echo "FLOW_ID = $(FLOW_ID)"
-	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/kc-client-openshift-challenging-client.json -s "authenticationFlowBindingOverrides={\"browser\": \"$(FLOW_ID)\"}" -s "redirectUris=[\"https://$(KEYCLOAK_HOST):8443/realms/master/oauth/token/implicit\"]"
-	./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -r master -s clientId=token-review -s enabled=true -s publicClient=false -s "redirectUris=[\"*\"]" -s "attributes={\"x509.subjectdn\": \"CN=$(KEYCLOAK_HOST)\"}" -s clientAuthenticatorType=client-x509
+	#$(shell ./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh get realms/master/authentication/flows --config /tmp/.kcadm.config -r master | jq -c '.[] | select(.alias | contains("http challenge")) | .id' | sed 's/"//g')
+	#$(eval FLOW_ID := $(shell ./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh get realms/master/authentication/flows --config /tmp/.kcadm.config -r master | jq -c '.[] | select(.alias | contains("http challenge")) | .id' | sed 's/"//g'))
+	#echo "FLOW_ID = $(FLOW_ID)"
+	#./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -f ./keycloak-configuration/kc-client-openshift-challenging-client.json -s "authenticationFlowBindingOverrides={\"browser\": \"$(FLOW_ID)\"}" -s "redirectUris=[\"https://$(KEYCLOAK_HOST):8443/realms/master/oauth/token/implicit\"]"
+	#./keycloak-$(KEYCLOAK_VERSION)/bin/kcadm.sh create clients --config /tmp/.kcadm.config -r master -s clientId=token-review -s enabled=true -s publicClient=false -s "redirectUris=[\"*\"]" -s "attributes={\"x509.subjectdn\": \"CN=$(KEYCLOAK_HOST)\"}" -s clientAuthenticatorType=client-x509
 
 .PHONY: keycloak/clean
 keycloak/clean:
@@ -63,17 +65,13 @@ keycloak/clean:
 
 .PHONY: keycloak/start
 keycloak/start:
-	@echo Use this script to start Keycloak:
-	@echo ./keycloak-$(KEYCLOAK_VERSION)/bin/standalone.sh -b $(KEYCLOAK_HOST)
+	./keycloak-$(KEYCLOAK_VERSION)/bin/standalone.sh -b $(KEYCLOAK_HOST) &
 
 .PHONY: minikube/start
 minikube/start:
-	minikube start \
-	--extra-config=apiserver.authorization-mode=RBAC \
-	--extra-config=apiserver.oidc-issuer-url="https://$(KEYCLOAK_HOST):8080/auth/realms/master" \
-	--extra-config=apiserver.oidc-client-id=openshift-cli \
-	--extra-config=apiserver.oidc-username-claim=email
+	./minikube.sh $(KEYCLOAK_HOST)
 
-.PHONY: keycloak/token
-keycloak/token:
+.PHONY: token
+token:
+	./token.sh $(KEYCLOAK_HOST)
 	

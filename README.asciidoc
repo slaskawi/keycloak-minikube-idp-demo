@@ -1,0 +1,72 @@
+= Keycloak as default IdP for Minikube
+
+This demo shows how to configure Keycloak as a default Identity Provider for Minikube.
+
+== Prerequisites
+
+* Java JDK (tested with `1.8`)
+* Minikube
+* OpenSSL
+* wget
+* Make
+
+== How to run this demo
+
+This repository contains `Makefile` with lots of helper utilities.
+
+At first, you will need a Keycloak binary, download it using:
+
+    make keycloak/download
+
+Once the download finished, generate new certificates using:
+
+    make cert/generate
+
+This will create `application.keystore`, which will be used by Keycloak for TLS and a corresponding `client.truststore` (or `client.pem`).
+
+The generated Keystore needs to be copied to Keycloak server by invoking:
+
+    make cert/install
+
+Once this part if finished, you may create a default `admin` user (with password `admin`) by invoking:
+
+    make keycloak/user
+
+Now, start the server and once it's fully up and running, check if the certificates are fine:
+
+    (terminal 1) make keycloak/start
+    (terminal 2) curl -cacert ./client.pem  https://localhost:8443
+
+Now, install a new Realm for Kubernetes:
+
+    make keycloak/prepare
+
+Once the realm is installed, you may now bootstrap Minikube
+
+    make minikube/start
+
+Note, that Minikube starts twice. The first run bootstraps Minikube with default settings and copies client certificate to it.
+
+At this point you should add proper permissions to a user we will be using very shortly, invoke:
+
+    kubectl apply -f permissions.yaml
+
+Now, let's switch to `test@test.com`:
+
+    make token
+
+The above command reconfigures your `kubectl` tool to use `test@test.com` user.
+
+Try it out:
+
+    kubectl get nodes
+
+That's all!
+
+== Big thanks!
+
+When writing this demo, I found two great demos on integrating Kubernetes and Keycloak:
+
+* https://medium.com/@mrbobbytables/kubernetes-day-2-operations-authn-authz-with-oidc-and-a-little-help-from-keycloak-de4ea1bdbbe
+* https://github.com/mrbobbytables/oidckube
+

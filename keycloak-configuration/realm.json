@@ -1,0 +1,61 @@
+{
+  "realm": "kubernetes",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "kubernetes",
+      "enabled": "true",
+      "publicClient": "true",
+      "standardFlowEnabled": "true",
+      "directAccessGrantsEnabled": "true",
+      "implicitFlowEnabled": "true",
+      "defaultClientScopes": [],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "kubernetes",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "roles",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "test",
+      "enabled": true,
+      "email": "test@test.com",
+      "firstName": "Test",
+      "lastName": "Test",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "test",
+          "value": "test"
+        }
+      ],
+      "realmRoles": [
+        "user",
+        "admin"
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "realm-admin"
+        ],
+        "account": [
+          "manage-account"
+        ]
+      }
+    }
+  ]
+}

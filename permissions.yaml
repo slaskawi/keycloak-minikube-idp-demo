@@ -13,7 +13,7 @@ metadata:
   name: admin-binding
 subjects:
 - kind: User
-  name: admin@admin.com
+  name: test@test.com
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
